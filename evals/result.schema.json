@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/C-surfing/scientific-agent-toolkit/evals/result.schema.json",
+  "title": "Scientific Agent Toolkit benchmark result manifest",
+  "type": "object",
+  "required": ["schema_version", "benchmark_id", "case_id", "skill_id", "provenance", "artifacts", "human_scores"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "benchmark_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "skill_id": {"type": "string", "minLength": 1},
+    "provenance": {
+      "type": "object",
+      "required": ["upstream_commit", "agent", "model"],
+      "properties": {
+        "upstream_commit": {"type": "string"},
+        "agent": {"type": "string"},
+        "model": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "path"],
+        "properties": {
+          "role": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "human_scores": {
+      "type": "object",
+      "properties": {
+        "scientific_correctness": {"type": ["number", "null"], "minimum": 0, "maximum": 5},
+        "evidence_fidelity": {"type": ["number", "null"], "minimum": 0, "maximum": 5},
+        "visual_clarity": {"type": ["number", "null"], "minimum": 0, "maximum": 5},
+        "editability_reproducibility": {"type": ["number", "null"], "minimum": 0, "maximum": 5},
+        "accessibility": {"type": ["number", "null"], "minimum": 0, "maximum": 5}
+      },
+      "additionalProperties": false
+    },
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": true
+}

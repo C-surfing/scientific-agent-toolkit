@@ -2,7 +2,7 @@
 
 > A curated, auditable registry of Agent Skills for scientific figures, research visualization, editable diagrams, and publication workflows.
 
-[中文说明](README.zh-CN.md) · [Selection guide](docs/selection-guide.md) · [Scoring](docs/scoring.md) · [Licensing](docs/licensing.md)
+[中文说明](README.zh-CN.md) · [Selection guide](docs/selection-guide.md) · [Benchmark](evals/README.md) · [Scoring](docs/scoring.md) · [Automation](docs/automation.md) · [Licensing](docs/licensing.md)
 
 ## Why this repository exists
 
@@ -14,6 +14,15 @@ This repository is therefore **not an awesome-list and not a vendored bundle**. 
 2. **Preserve data and topology semantics** before aesthetics.
 3. **Prefer editable, reproducible deliverables** for publication work.
 4. **Keep upstream authorship and licensing explicit**.
+
+## v0.2: evidence for the curation
+
+v0.1 established the registry, routing model, installer, licensing gates, and curator scores. v0.2 adds two independent evidence layers:
+
+- **Benchmark/eval framework** — portable run manifests, artifact-contract checks, exact upstream commit provenance, a 40-point automated score, and a 60-point expert scientific-review rubric.
+- **Upstream health + lockfile** — scheduled repository/ref/path/license checks and a stable `upstream-lock.json` that records the observed upstream commit without silently rewriting human curation policy.
+
+Curator scores and benchmark scores are deliberately separate. A curator score evaluates whether a project belongs in this toolkit; a benchmark score evaluates a particular skill run on a particular case.
 
 ## Curated stack
 
@@ -39,7 +48,7 @@ This repository is therefore **not an awesome-list and not a vendored bundle**. 
 | `science-plot-formatter` | Reference-only | You want venue-oriented formatting ideas; no clear root license was found during curation |
 | PaperBanana | Experimental reference | You want generative academic-illustration exploration; not the default path for data-grounded or topology-critical figures |
 
-Scores are curator assessments, not benchmark claims. See [docs/scoring.md](docs/scoring.md).
+Curator scores are not benchmark claims. See [docs/scoring.md](docs/scoring.md) and [evals/README.md](evals/README.md).
 
 ## Routing: choose by intent
 
@@ -61,6 +70,42 @@ Need a research visual
 ```
 
 A single task may use a **primary skill + one QA skill**, but avoid stacking several authoring skills on the same artifact unless there is a clear handoff. See the [selection matrix](docs/selection-guide.md).
+
+## Benchmark
+
+The benchmark is agent-agnostic: it evaluates delivered artifacts, not a particular model vendor.
+
+```bash
+# validate benchmark contracts
+python3 scripts/eval_runner.py --validate
+
+# create a portable run manifest
+python3 scripts/eval_runner.py \
+  --init-run claim-to-data-figure sci-plot \
+  --output eval-results/sci-plot/run.json
+
+# score after artifacts/provenance and expert review have been recorded
+python3 scripts/eval_runner.py --score eval-results/sci-plot/run.json
+```
+
+Automated checks account for 40 points; expert review accounts for 60. If expert review is incomplete, the runner reports `needs-human-review` instead of fabricating a total score.
+
+See [evals/README.md](evals/README.md).
+
+## Upstream health and reproducibility lock
+
+```bash
+GITHUB_TOKEN=... python3 scripts/check_upstreams.py \
+  --output /tmp/upstream-health.json \
+  --fail-on-critical
+
+python3 scripts/update_upstream_lock.py \
+  --health /tmp/upstream-health.json
+```
+
+`skills.json` remains human-curated policy. `upstream-lock.json` records stable machine observations such as the resolved commit, observed license, archived state, and source subdirectory. Transient API failures are `unknown`, not false evidence of breakage.
+
+A weekly GitHub workflow opens/refreshes an automation PR **only when meaningful lock content changes**. It never silently merges an upstream upgrade or rewrites curator scores. See [docs/automation.md](docs/automation.md).
 
 ## Install
 
@@ -108,20 +153,28 @@ scientific-agent-toolkit/
 ├── THIRD_PARTY_NOTICES.md
 ├── CONTRIBUTING.md
 ├── registry/
-│   └── skills.json
+│   ├── skills.json
+│   └── upstream-lock.json
 ├── schema/
 │   └── skill.schema.json
+├── evals/
+│   ├── README.md
+│   ├── benchmark.json
+│   └── result.schema.json
 ├── docs/
 │   ├── selection-guide.md
 │   ├── scoring.md
+│   ├── automation.md
 │   └── licensing.md
 ├── scripts/
 │   ├── install.py
-│   ├── install.sh
-│   ├── install.ps1
+│   ├── eval_runner.py
+│   ├── check_upstreams.py
+│   ├── update_upstream_lock.py
 │   └── validate_registry.py
 └── .github/workflows/
-    └── validate.yml
+    ├── validate.yml
+    └── upstream-health.yml
 ```
 
 ## Curation hard gates
@@ -145,7 +198,7 @@ See [docs/licensing.md](docs/licensing.md) and [THIRD_PARTY_NOTICES.md](THIRD_PA
 
 ## Contributing
 
-New candidates should improve role coverage rather than just increase the count. Submit metadata, evidence for the license, a scoring breakdown, and a routing rationale. See [CONTRIBUTING.md](CONTRIBUTING.md).
+New candidates should improve role coverage rather than just increase the count. Submit metadata, evidence for the license, a scoring breakdown, and a routing rationale. Benchmark contributions should add a reproducible case contract rather than only a screenshot of a good result. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Disclaimer
 

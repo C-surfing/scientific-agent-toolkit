@@ -12,11 +12,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate registry invariants
+
+      - name: Compile Python entrypoints
+        run: |
+          python3 -m py_compile \
+            scripts/install.py \
+            scripts/validate_registry.py \
+            scripts/eval_runner.py \
+            scripts/check_upstreams.py \
+            scripts/update_upstream_lock.py
+
+      - name: Validate registry and lock invariants
         run: python3 scripts/validate_registry.py
+
+      - name: Validate benchmark specification
+        run: python3 scripts/eval_runner.py --validate
+
+      - name: Run deterministic v0.2 tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Smoke-test benchmark manifest creation
+        run: |
+          python3 scripts/eval_runner.py \
+            --init-run claim-to-data-figure sci-plot \
+            --output /tmp/eval-run.json
+          test -s /tmp/eval-run.json
+
       - name: Smoke-test installer selection
         run: |
           python3 scripts/install.py --list

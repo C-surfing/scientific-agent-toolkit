@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0.0",
+  "benchmark_id": "scientific-agent-toolkit-core-v0.2",
+  "description": "Agent-agnostic benchmark contracts for scientific visualization skills. Machine checks cover deliverable/provenance contracts; expert review covers scientific and visual quality.",
+  "scoring": {
+    "automated_max": 40,
+    "human_max": 60,
+    "human_dimensions": [
+      {"id":"scientific_correctness","label":"Scientific correctness","weight":20,"anchors":{"0":"Incorrect or misleading","3":"Mostly correct with material caveats","5":"Scientifically correct and appropriately qualified"}},
+      {"id":"evidence_fidelity","label":"Evidence fidelity","weight":15,"anchors":{"0":"Changes or invents evidence","3":"Mostly faithful with minor ambiguity","5":"Fully traceable to the provided evidence/source"}},
+      {"id":"visual_clarity","label":"Visual clarity","weight":10,"anchors":{"0":"Hard to interpret","3":"Readable but improvable","5":"Clear hierarchy and efficient communication"}},
+      {"id":"editability_reproducibility","label":"Editability and reproducibility","weight":10,"anchors":{"0":"Opaque/non-reproducible","3":"Partially editable or reproducible","5":"Source-of-truth is preserved and rerunnable"}},
+      {"id":"accessibility","label":"Accessibility","weight":5,"anchors":{"0":"Meaning depends on inaccessible encoding","3":"Generally usable","5":"Color/labels/contrast are deliberately accessible"}}
+    ]
+  },
+  "cases": [
+    {
+      "id":"final-figure-qa",
+      "title":"Final scientific figure QA",
+      "category":"scientific-qa",
+      "candidate_skills":["scientific-visualization"],
+      "task":"Audit a completed scientific figure for truthful encoding, uncertainty/missing-data handling, accessibility, publication sizing and export readiness without changing the underlying evidence.",
+      "required_artifacts":[
+        {"role":"qa-report","extensions":[".md",".json"]},
+        {"role":"figure","extensions":[".svg",".pdf",".png",".tiff",".tif"]}
+      ]
+    },
+    {
+      "id":"claim-to-data-figure",
+      "title":"Claim-to-data figure design",
+      "category":"data-figure-design",
+      "candidate_skills":["sci-plot"],
+      "task":"Turn a scientific claim plus tabular evidence into an appropriate reproducible figure with defensible statistical semantics and a documented figure contract.",
+      "required_artifacts":[
+        {"role":"figure","extensions":[".svg",".pdf",".png"]},
+        {"role":"source","extensions":[".py",".r",".R"]},
+        {"role":"figure-contract","extensions":[".json",".yaml",".yml",".md"]}
+      ]
+    },
+    {
+      "id":"manuscript-data-package",
+      "title":"Manuscript plus raw-data package",
+      "category":"paper-to-figures",
+      "candidate_skills":["paper-figures"],
+      "task":"From a manuscript excerpt and raw CSV/XLSX inputs, produce a publication-ready figure/table package with reproducible analysis and concise reporting.",
+      "required_artifacts":[
+        {"role":"figure","extensions":[".svg",".pdf",".png",".tiff",".tif"]},
+        {"role":"source","extensions":[".py",".r",".R"]},
+        {"role":"table","extensions":[".csv",".xlsx",".tsv",".md"]}
+      ]
+    },
+    {
+      "id":"semantic-chart-refinement",
+      "title":"Semantic-preserving chart refinement",
+      "category":"chart-refinement",
+      "candidate_skills":["chart-aesthetic-logic"],
+      "task":"Improve a semantically correct but visually weak Python chart while preserving values, scales, statistical meaning and category relationships.",
+      "required_artifacts":[
+        {"role":"figure","extensions":[".svg",".pdf",".png"]},
+        {"role":"source","extensions":[".py"]}
+      ]
+    },
+    {
+      "id":"research-framework-diagram",
+      "title":"Editable research framework diagram",
+      "category":"scientific-diagram-authoring",
+      "candidate_skills":["scientific-figure-design"],
+      "task":"Create an editable method/framework diagram from a structured research description. Preserve explicit uncertainty and do not invent unsupported components.",
+      "required_artifacts":[
+        {"role":"editable-master","extensions":[".drawio"]},
+        {"role":"figure","extensions":[".svg",".pdf",".png"]},
+        {"role":"spec","extensions":[".json",".yaml",".yml"]}
+      ]
+    },
+    {
+      "id":"model-topology-recovery",
+      "title":"Model topology recovery",
+      "category":"ml-architecture",
+      "candidate_skills":["ml-architecture-diagram"],
+      "task":"Recover the execution topology of supplied ML model code/config before producing a publication abstraction. Unknown internals must remain unknown rather than inferred for aesthetics.",
+      "required_artifacts":[
+        {"role":"architecture-ir","extensions":[".json",".yaml",".yml"]},
+        {"role":"figure","extensions":[".svg",".pdf",".png",".drawio",".pptx"]}
+      ]
+    },
+    {
+      "id":"reference-to-editable-pptx",
+      "title":"Reference diagram to editable PPTX",
+      "category":"diagram-reconstruction",
+      "candidate_skills":["sci-diagram-pptx"],
+      "task":"Reconstruct a supplied scientific diagram as native editable PowerPoint shapes/text/connectors while preserving topology and labels.",
+      "required_artifacts":[
+        {"role":"presentation","extensions":[".pptx"]},
+        {"role":"qa-report","extensions":[".md",".json"]}
+      ]
+    }
+  ]
+}

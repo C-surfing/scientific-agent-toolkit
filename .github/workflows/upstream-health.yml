@@ -1,0 +1,85 @@
+name: upstream-health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-health
+  cancel-in-progress: false
+
+jobs:
+  check-and-refresh-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check upstream health
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/check_upstreams.py \
+            --output /tmp/upstream-health.json \
+            --markdown /tmp/upstream-health.md \
+            --fail-on-critical
+          cat /tmp/upstream-health.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare automation branch and refresh lock
+        id: refresh
+        run: |
+          set -euo pipefail
+          BRANCH='automation/upstream-lock'
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
+          git switch -C "$BRANCH" origin/main
+          python3 scripts/update_upstream_lock.py \
+            --health /tmp/upstream-health.json \
+            --lock registry/upstream-lock.json
+          if git diff --quiet -- registry/upstream-lock.json; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit lock update
+        if: steps.refresh.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name 'scientific-agent-toolkit-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add registry/upstream-lock.json
+          git commit -m 'chore: refresh upstream lock'
+          git push --force-with-lease origin HEAD:automation/upstream-lock
+
+      - name: Open or refresh lock PR
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH='automation/upstream-lock'
+          PR_NUMBER="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr edit "$PR_NUMBER" \
+              --title 'chore: refresh upstream lock' \
+              --body-file /tmp/upstream-health.md
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title 'chore: refresh upstream lock' \
+              --body-file /tmp/upstream-health.md
+          fi
