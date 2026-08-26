@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/scientific-agent-toolkit/skill.schema.json",
+  "title": "Scientific Agent Toolkit registry",
+  "type": "object",
+  "required": ["schema_version", "skills"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "generated_from": {"type": "string"},
+    "skills": {"type": "array", "items": {"$ref": "#/$defs/skill"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "skill": {
+      "type": "object",
+      "required": ["id","name","tier","category","roles","description","upstream","license","installable","compatibility","outputs","routing"],
+      "properties": {
+        "id": {"type":"string","pattern":"^[a-z0-9][a-z0-9-]*$"},
+        "name": {"type":"string","minLength":1},
+        "tier": {"enum":["core","extension","reference","experimental"]},
+        "category": {"type":"string"},
+        "roles": {"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string"}},
+        "description": {"type":"string","minLength":20},
+        "upstream": {
+          "type":"object",
+          "required":["repo","url","ref","subdir"],
+          "properties": {
+            "repo":{"type":"string","pattern":"^[^/]+/[^/]+$"},
+            "url":{"type":"string","pattern":"^https://github\\.com/"},
+            "ref":{"type":"string","minLength":1},
+            "subdir":{"type":"string","minLength":1}
+          },
+          "additionalProperties":false
+        },
+        "license": {
+          "type":"object",
+          "required":["spdx","status","attribution"],
+          "properties": {
+            "spdx":{"type":"string"},
+            "status":{"enum":["verified","verified-with-upstream-caveats","unverified"]},
+            "attribution":{"type":"string"}
+          },
+          "additionalProperties":false
+        },
+        "installable":{"type":"boolean"},
+        "compatibility":{"type":"array","items":{"type":"string"}},
+        "outputs":{"type":"array","items":{"type":"string"}},
+        "score":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/score"}]},
+        "routing": {
+          "type":"object",
+          "required":["use_when","avoid_when"],
+          "properties": {
+            "use_when":{"type":"array","minItems":1,"items":{"type":"string"}},
+            "avoid_when":{"type":"array","minItems":1,"items":{"type":"string"}}
+          },
+          "additionalProperties":false
+        }
+      },
+      "additionalProperties":false
+    },
+    "score": {
+      "type":"object",
+      "required":["scientific_integrity","reproducibility","workflow_quality","editability_outputs","qa_evals","interoperability","maintenance","licensing","scope_uniqueness","total"],
+      "properties": {
+        "scientific_integrity":{"type":"integer","minimum":0,"maximum":20},
+        "reproducibility":{"type":"integer","minimum":0,"maximum":15},
+        "workflow_quality":{"type":"integer","minimum":0,"maximum":15},
+        "editability_outputs":{"type":"integer","minimum":0,"maximum":10},
+        "qa_evals":{"type":"integer","minimum":0,"maximum":10},
+        "interoperability":{"type":"integer","minimum":0,"maximum":10},
+        "maintenance":{"type":"integer","minimum":0,"maximum":10},
+        "licensing":{"type":"integer","minimum":0,"maximum":5},
+        "scope_uniqueness":{"type":"integer","minimum":0,"maximum":5},
+        "total":{"type":"integer","minimum":0,"maximum":100}
+      },
+      "additionalProperties":false
+    }
+  }
+}
