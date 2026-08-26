@@ -1,6 +1,11 @@
 # Curation and Scoring
 
-The score is a **curator score**, not an objective benchmark or claim of superiority. It is used to make inclusion decisions explainable and repeatable.
+The score in `registry/skills.json` is a **curator score**, not an objective benchmark or claim of superiority. It is used to make inclusion decisions explainable and repeatable.
+
+v0.2 adds a separate benchmark score for individual runs. The two scores answer different questions and must not be merged into one number:
+
+- **Curator score** → should this project occupy a Core/Extension role in the toolkit?
+- **Benchmark score** → how well did a specific skill version perform on a specific reproducible case?
 
 ## Hard gates
 
@@ -14,7 +19,7 @@ A candidate cannot be `core` or automatically installable unless all applicable 
 
 A failed license gate always makes the candidate `reference-only`, regardless of score or popularity.
 
-## 100-point rubric
+## Curator 100-point rubric
 
 | Criterion | Weight | What earns a high score |
 |---|---:|---|
@@ -27,6 +32,17 @@ A failed license gate always makes the candidate `reference-only`, regardless of
 | Maintenance signal | 10 | Recent activity, coherent repository, tests/docs, non-archived status |
 | Licensing clarity | 5 | SPDX license and third-party attribution handled cleanly |
 | Scope uniqueness | 5 | Adds a distinct capability instead of duplicating an existing core role |
+
+## Benchmark run score
+
+A completed v0.2 benchmark run is also 100 points, but uses a different rubric:
+
+- **40 automated** — required deliverable contracts and exact upstream commit provenance.
+- **60 expert review** — scientific correctness (20), evidence fidelity (15), visual clarity (10), editability/reproducibility (10), accessibility (5).
+
+The benchmark runner does not emit a final total until all expert-review dimensions are present. See [../evals/README.md](../evals/README.md).
+
+Do not compare benchmark totals across unrelated task mixes without reporting the cases, inputs, agent/model, upstream commit, and number of runs.
 
 ## Tier policy
 
