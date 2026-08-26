@@ -2,7 +2,18 @@
 
 一个面向科研绘图、论文图表、科研示意图和可编辑报告图的 **精选 Agent Skills Registry**。
 
-它不是“把几十个 GitHub 链接堆在一起”的 awesome-list，也不直接复制上游源码。仓库重点解决三个问题：**怎么选、什么时候调用、如何合法且可复现地安装**。
+它不是“把几十个 GitHub 链接堆在一起”的 awesome-list，也不直接复制上游源码。仓库重点解决三个问题：**怎么选、什么时候调用、如何合法且可复现地安装与评测**。
+
+[Skill 选择矩阵](docs/selection-guide.md) · [Benchmark](evals/README.md) · [评分规则](docs/scoring.md) · [自动化](docs/automation.md) · [许可证](docs/licensing.md)
+
+## v0.2：开始给“精选”提供证据
+
+v0.1 建立了 Registry、路由、安装器、许可证门槛和人工 curator score。v0.2 新增两个彼此独立的证据层：
+
+- **Benchmark / Eval Framework**：统一 run manifest、交付物契约检查、精确 upstream commit provenance、40 分自动检查 + 60 分人工科研 rubric。
+- **Upstream Health + Lockfile**：定时检查仓库/ref/skill 路径/license，并用 `upstream-lock.json` 记录实际解析到的 commit，而不会偷偷修改人工策展判断。
+
+Curator score 与 benchmark score 严格分开：前者回答“这个项目是否值得进入工具箱”，后者回答“某个 Skill 在某个固定任务上的一次运行表现如何”。
 
 ## 核心原则
 
@@ -14,7 +25,7 @@
 
 ## 推荐 Core 7
 
-| Skill | 主要职责 | 分数 |
+| Skill | 主要职责 | Curator Score |
 |---|---|---:|
 | `scientific-visualization` | 科研真实性、可访问性、publication QA 的总规范层 | 93 |
 | `sci-plot` | 从 claim/evidence 出发设计、修改、审查科研数据图 | 95 |
@@ -49,6 +60,52 @@
 └─ 材料/电化学/光谱/DFT 专用图 → huitu（Extension）
 ```
 
+## Benchmark / Eval
+
+Benchmark 不绑定某个模型或 Agent，而是评价 Skill 最终交付的科研产物。
+
+```bash
+# 校验 benchmark 定义
+python3 scripts/eval_runner.py --validate
+
+# 为一次测试生成统一 manifest
+python3 scripts/eval_runner.py \
+  --init-run claim-to-data-figure sci-plot \
+  --output eval-results/sci-plot/run.json
+
+# 完成产物登记、provenance 和人工评分后计算成绩
+python3 scripts/eval_runner.py --score eval-results/sci-plot/run.json
+```
+
+评分固定拆成：
+
+- 40 分机器可验证：交付物角色/格式、文件存在性、精确 upstream commit provenance；
+- 60 分专家判断：科学正确性、证据忠实度、视觉清晰度、可编辑/可复现性、可访问性。
+
+如果人工评分还没完成，runner 只返回 `needs-human-review`，不会为了“有个数字”伪造 100 分总成绩。
+
+详见 [evals/README.md](evals/README.md)。
+
+## Upstream Health 与 Lockfile
+
+```bash
+GITHUB_TOKEN=... python3 scripts/check_upstreams.py \
+  --output /tmp/upstream-health.json \
+  --fail-on-critical
+
+python3 scripts/update_upstream_lock.py \
+  --health /tmp/upstream-health.json
+```
+
+这里采用双层设计：
+
+- `registry/skills.json`：人工策展政策，包括 tier、role、license 判断、curator score、路由；
+- `registry/upstream-lock.json`：机器观测事实，包括 resolved commit、observed license、archived、pushed_at、subdir 状态。
+
+API 限流或临时网络失败只会标为 `unknown`，不会被误判成“上游已损坏”。定时 GitHub Workflow 只有在 lock 的稳定内容真正变化时才创建/刷新自动化 PR，而且**绝不自动 merge upstream 升级**。
+
+详见 [docs/automation.md](docs/automation.md)。
+
 ## 安装
 
 ```bash
@@ -66,22 +123,24 @@ python3 scripts/install.py --agent claude --skill sci-plot chart-aesthetic-logic
 - 尽可能复制上游 LICENSE；
 - 对 `license.status != verified` 的条目 fail closed。
 
-详细见：
-
-- [Skill 选择矩阵](docs/selection-guide.md)
-- [评分规则](docs/scoring.md)
-- [许可证与 attribution](docs/licensing.md)
-
 ## 目录
 
 ```text
-registry/skills.json          # 所有候选的统一元数据
-schema/skill.schema.json      # metadata JSON Schema
-docs/selection-guide.md       # 路由/选择矩阵
-docs/scoring.md               # 100 分评分体系
-docs/licensing.md             # 上游许可证与归属机制
-scripts/install.py            # 零第三方 Python 依赖安装器
-scripts/validate_registry.py  # Registry 校验
+registry/skills.json             # 人工策展元数据
+registry/upstream-lock.json      # 机器观测的稳定 upstream 状态
+schema/skill.schema.json         # metadata JSON Schema
+evals/benchmark.json             # Core benchmark cases + 评分定义
+evals/result.schema.json         # 单次测试 manifest schema
+evals/README.md                  # benchmark 使用说明
+docs/selection-guide.md          # 路由/选择矩阵
+docs/scoring.md                  # curator 100 分评分体系
+docs/automation.md               # health/lock/自动 PR 机制
+docs/licensing.md                # 上游许可证与归属机制
+scripts/install.py               # 零第三方 Python 依赖安装器
+scripts/eval_runner.py           # benchmark manifest + scorer
+scripts/check_upstreams.py       # 上游健康检查
+scripts/update_upstream_lock.py  # 稳定 lockfile 更新器
+scripts/validate_registry.py     # Registry + Lock invariant 校验
 ```
 
 本仓库自己的代码和元数据使用 MIT；上游 Skill 始终保持其原始许可证，本仓库不会替上游重新授权。
