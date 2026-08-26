@@ -32,6 +32,9 @@ jobs:
       - name: Validate benchmark specification
         run: python3 scripts/eval_runner.py --validate
 
+      - name: Run deterministic v0.2 tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Smoke-test benchmark manifest creation
         run: |
           python3 scripts/eval_runner.py \
